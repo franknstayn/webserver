@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Attendance Web Display</title>
+    <link href="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+    <link href="style.css" rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- Team -->
+    <section class="team">
+        <div class="grid-xlarge">
+            <div class="team__container"></div>
+        </div>
+    </section>
+
+    <!-- <p>sample websocket</p> -->
+    <div id="messages"></div>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        let socket = io();
+
+        socket.on('connect', function () {
+            console.log('Connected to server');
+        });
+
+        // socket.emit('send', 'data is emitted !')
+
+        socket.on('new', function (data) {
+            // var chatMessage = document.createElement("li");
+            // chatMessage.innerHTML = data;
+            // document.getElementById("messages").appendChild(chatMessage)
+        });
+
+
+        socket.on('incoming_record', function (data) {
+            var image_location = "";
+            var _api = "http://localhost:8080/";
+
+            $.ajax({  
+                url: _api + 'attendance/add',  
+                type: 'POST',  
+                dataType: 'json',  
+                data: { 
+                    rfid : data.rfid,
+                    date_time : data.date_time,
+                    stat : 'IN'
+                },
+                dataType: 'json',
+                success: function (data, textStatus, xhr) {  
+                    // console.log(data.id);
+                    $.getJSON(_api + "attendance/"+data.id, function (result) {
+                        // for (var i = 0; i < result.length; i++) {
+                            // console.log((result))
+                            $('.team__link').removeClass('team__link__active');
+                            $('.team__container').prepend('<article> ' +
+                                '<a class="team__link team__link__active" href="#" target="_blank"> ' +
+                                '<div class="team__img-container"> ' +
+                                '<span class="preloader"></span> ' +
+                                '<figure class="team__img"></figure> ' +
+                                '<img class="absolute-bg" src="images/' + result[0].profile_picture + '" "/> ' +
+                                '</figure> ' +
+                                '</div>' +
+                                '<h4 class="text-center">' + result[0].status  + '</h4>' +
+                                '<div class="team__text">' +
+                                '<h3 class="team__title">' + result[0].firstname + ' ' + result[0].lastname + '</h3>' +
+                                '<span class="team__position">'+result[0].datetime_recorded+'</span>' +
+                                '</div>' +
+                                '</a>' +
+                                '</article>');
+                        // }
+                    });
+                },  
+                error: function (xhr, textStatus, errorThrown) {  
+                    console.log('Error in Operation');  
+                }  
+            }); 
+        });
+
+    </script>
+    <script>
+
+        $(document).ready(function () {
+            var image_location = "";
+            var _api = "http://localhost:8080/";
+
+            $.getJSON(_api + "attendance", function (result) {
+                for (var i = 0; i < result.length; i++) {
+                    $('.team__container').append('<article> ' +
+                        '<a class="team__link ' + ((i == 0) ? 'team__link__active' : '') + '" href="#" target="_blank"> ' +
+                        '<div class="team__img-container"> ' +
+                        '<span class="preloader"></span> ' +
+                        '<figure class="team__img"></figure> ' +
+                        '<img class="absolute-bg" src="images/' + result[i].profile_picture + '" "/> ' +
+                        '</figure> ' +
+                        '</div>' +
+                        '<h4 class="text-center">' + result[i].status  + '</h4>' +
+                        '<div class="team__text">' +
+                        '<h3 class="team__title">' + result[i].firstname + ' ' + result[i].lastname + '</h3>' +
+                        '<span class="team__position">'+result[i].datetime_recorded+'</span>' +
+                        '</div>' +
+                        '</a>' +
+                        '</article>');
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
